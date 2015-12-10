@@ -32,8 +32,9 @@ require_once('pworks/mvc/IResult.iface.php');
 
 
 /**
-* [2011-12-08][Milo Liu] Add for standard JSON data format
-*/
+ * [2015-12-10][Milo Liu] Added json and utf8 header
+ * [2011-12-08][Milo Liu] Add for standard JSON data format
+ */
 class JsonResult implements IResult {
 	public function show(IAction &$action, ResultConfig $config) {
 
@@ -45,6 +46,9 @@ class JsonResult implements IResult {
 		$result['head']['warnings'] = $action->getWarnings();
 		$result['head']['infos'] = $action->getInfos();
 		$result['body'] = $action->getData();
+
+		header('Content-type: application/json');
+		header('Content-type: text/html; charset=utf-8');
 
 		echo json_encode($result);
 	}
