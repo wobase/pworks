@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2008 - 2015 Milo Liu<cutadra@gmail.com>.
+ * Copyright 2008 - 2016 Milo Liu<cutadra@gmail.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,76 +30,33 @@
  */
 
 /**
- * 对应Action结点的配置数据结构.
- *
- * 层次关系如下:
- * ----------
- * application
- * |-- actions
- *     |-- action
- *
- * 下属成员中:
- * - id 和 clzName为结点属性
- * - filters 和 results 为子结点
- *
- * @see AppConfig
+ * 此类用于存储RESTFul API的设置信息
  */
-class ActionConfig
-{
-    public $id;
+class RestConfig{
 
-    public $clzName;
+  /**
+   * 解释后的URL正则表达式
+   * @var string
+   */
+  public $pattern;
 
+  /**
+   * 配置文件中的URL设置
+   * @var string
+   */
+  public $url;
 
-    /**
-     * 新增action类型, 默认为controller, 可选值还包括'rest'
-     * controller 为标准类型
-     * rest 用于映射Restful API, 该类型的action需要另外两个新增的设置共同直效, 分别为:
-     *  - method
-     *  - url
-     * @var string
-     */
-    public $type = 'controller';
+  /**
+   * 配置文件中的http method设置
+   * @var [type]
+   */
+  public $method;
 
-    /**
-     * 此配置暂仅用于type为rest的action配置, 用于表示对应的HTTP METHOD, 当前仅支持四种,
-     * 分别为: get, post, put, 和delete
-     * @var string
-     */
-    public $method = 'get';
-
-    /**
-     * 仅当type为rest时起效, 用于定义当前api绑定的Restful API URL
-     * @var string
-     */
-    public $url;
-
-    /**
-     * @var array<filterId>
-     */
-    public $filters;
-
-    /**
-     * @var array<ResultConfig>
-     */
-    public $results;
+  /**
+   * 对应的Action->id
+   * @var string
+   */
+  public $action;
 
 
-
-    public function toXml()
-    {
-        $outXml = "<action id=\"{$this->id}\" class=\"{$this->clzName}\">";
-
-        foreach ($this->filters as $filter) {
-            $outXml .= "<filter id=\"$filter\"/>";
-        }
-
-        foreach ($this->results as $result) {
-            $outXml .= $result->toXml();
-        }
-
-        $outXml .= '</action>';
-
-        return $outXml;
-    }
 }

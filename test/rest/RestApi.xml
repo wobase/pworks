@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application id="yun-api" default-action="restful">
+    <resultTypes>
+        <resultType id="json" class="pworks.mvc.result.JsonResult"/>
+    </resultTypes>
+    <actions>
+        <!-- ticket -->
+        <action id="ticket.Search" type="rest"
+          method="get"
+          url="/ticket">
+            <result id="succ" type="json"/>
+        </action>
+
+        <action id="ticket.Create" type="rest"
+          method="post"
+          url="/ticket">
+            <result id="succ" type="json"/>
+        </action>
+
+        <action id="ticket.GetDetails" type="rest"
+          method="get"
+          url="/ticket/id/:ticketId">
+            <result id="succ" type="json"/>
+        </action>
+
+        <action id="ticket.Update" type="rest"
+          method="put"
+          url="/ticket/id/:ticketId">
+            <result id="succ" type="json"/>
+        </action>
+
+        <action id="ticket.Delete" type="rest"
+          method="delete"
+          url="/ticket/id/:ticketId">
+            <result id="succ" type="json"/>
+        </action>
+
+        <!-- comment -->
+        <action id="ticket.comment.Search" type="rest"
+          method="get"
+          url="/ticket/id/:ticketId/comment">
+            <result id="succ" type="json"/>
+        </action>
+
+        <action id="ticket.comment.Create" type="rest"
+          method="post"
+          url="/ticket/id/:ticketId/comment">
+            <result id="succ" type="json"/>
+        </action>
+
+        <action id="ticket.comment.Update" type="rest"
+          method="put"
+          url="/ticket/id/:ticketId/comment/id/:commentId">
+            <result id="succ" type="json"/>
+        </action>
+
+        <action id="ticket.comment.Delete" type="rest"
+          method="delete"
+          url="/ticket/id/:ticketId/comment/id/:commentId">
+            <result id="succ" type="json"/>
+        </action>
+
+    </actions>
+</application>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application id="yun-api" default-action="restful">
+<resultTypes>
+     <resultType id="json" class="pworks.mvc.result.JsonResult" />
+ </resultTypes>
+ <actions>
+          <action id="ticket.Search" type="rest" method="get" url="/ticket">
+            <result id="succ" type="json"/>
+          </action>
+</actions>
+ </application>
