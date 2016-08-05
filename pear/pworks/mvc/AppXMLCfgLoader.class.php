@@ -34,6 +34,7 @@ require_once('pworks/mvc/ActionConfig.class.php');
 require_once('pworks/mvc/FilterConfig.class.php');
 require_once('pworks/mvc/ResultTypeConfig.class.php');
 require_once('pworks/mvc/ResultConfig.class.php');
+require_once('pworks/mvc/RestConfig.class.php');
 
 
 /**
