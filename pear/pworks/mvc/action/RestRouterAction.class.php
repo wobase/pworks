@@ -59,16 +59,21 @@ class RestRouterAction extends BaseAction{
 
   public function execute(){
 
+    $method = strtolower(trim($this->method));
+
     $appConfig = FrontController::getConfHelper()->getApp();
     $restConfigs = $appConfig->rest[$method];
-    $rs = $this->matchAction($restConfigs, $url);
+    //print_r($restConfigs);
+    $rs = $this->matchAction($restConfigs, $this->url);
     if( null === $rs){
-      $this->addError('action', '405');
+      $this->addError('action', __CLASS__);
+      $this->addError('url', $this->url);
+      $this->addError('method', $method);
       $this->__status = '405';
       return 'succ';
     }
 
-    $actionId = $rs['action'];
+    $actionId = $rs['action']->id;
     $param = $rs['param'];
 
     $restAction = $this->callAction($actionId, $param);
@@ -112,11 +117,15 @@ class RestRouterAction extends BaseAction{
         }
 
         if($right){
-          return array('action' => $restCfg->action->id, 'param' => $param);
+          return array('action' => $restCfg->action, 'param' => $param);
         }
       }
     }
 
     return null;
+  }
+
+  public function getStatus(){
+    return $this->__status;
   }
 }

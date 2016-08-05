@@ -137,6 +137,7 @@ class AppXMLCfgLoader {
 	private $AppConfig;
 
 	public function load($filename) {
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		$dom = new DOMDocument();
 		$dom->load($filename);
 
@@ -400,6 +401,7 @@ class AppXMLCfgLoader {
 
 			$this->AppConfig->actions[$action->id]	= $action;
 		}
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 	}
 
 	public function getAppConfig(){

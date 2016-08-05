@@ -2,4 +2,4 @@ Options +FollowSymLinks
 RewriteEngine On
 RewriteBase /
 
-RewriteRule ^(\w+)\.json$ index\.php\?action=restful&url=$1&method=%{REQUEST_METHOD} [QSA,L]
+RewriteRule ^(/\w+)\$ index\.php\?actionId=restful&url=$1&method=%{REQUEST_METHOD} [QSA,L]

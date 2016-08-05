@@ -1,31 +1,31 @@
 <?php
 /*
- * Copyright 2008 - 2015 Milo Liu<cutadra@gmail.com>. 
+ * Copyright 2008 - 2015 Milo Liu<cutadra@gmail.com>.
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
+ *    1. Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
- * 
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
+ *
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
- * The views and conclusions contained in the software and documentation are 
- * those of the authors and should not be interpreted as representing official 
+ *
+ * The views and conclusions contained in the software and documentation are
+ * those of the authors and should not be interpreted as representing official
  * policies, either expressed or implied, of the copyright holder.
  */
 
@@ -39,8 +39,8 @@ require_once('pworks/common/cache/ICacheHelper.iface.php');
  * Enter description here...
  *
  * TODO
- * [2014-06-25] 将主类中的 APC Cache抽象为适配器接口 
- * 
+ * [2014-06-25] 将主类中的 APC Cache抽象为适配器接口
+ *
  *
  * ==================DONE========================
  * [2012-01-14] Add parameter element into Filter
@@ -52,19 +52,19 @@ require_once('pworks/common/cache/ICacheHelper.iface.php');
  *
  * [2009-05-26] Enhance Error handling for Result components
  *
- * @example 
+ * @example
  * <code>
  * define(__DEBUG__, false);
- * 
+ *
  * require_once('pworks/mvc/FrontController.class.php');
  * require_once('pworks/mvc/DefaultSystemDataHelper.class.php');
  * require_once('pworks/mvc/CachedConfigHelper.class.php');
- * 
+ *
  * require_once('pworks/common/cache/impl/SimpleCacheHelper.class.php');
  * require_once('pworks/common/cache/impl/ApcCache.class.php');
- * 
+ *
  * try{
- * 
+ *
  * //set config helper
  * $confHelper = new CachedConfigHelper();
  * $confCacheHelper = new SimpleCacheHelper();
@@ -72,22 +72,22 @@ require_once('pworks/common/cache/ICacheHelper.iface.php');
  * $confCacheHelper->setCache(new ApcCache(), 1);
  * $confHelper->setCacheHelper($confCacheHelper);
  * $doConfigCheck = false;
- * $confHelper->init('path/to/config/app.xml', $doConfigCheck);	
+ * $confHelper->init('path/to/config/app.xml', $doConfigCheck);
  * FrontController::$confHelper = $confHelper;
- * 
+ *
  * //set data input helper
  * FrontController::$dataHelper = new DefaultSystemDataHelper();
- * 
+ *
  * //set cache helper
  * $appCacheHelper = new SimpleCacheHelper();
  * $appCacheHelper->setGroup('obj_for_appname');
  * $appCacheHelper->setCache(new ApcCache(), 1);
  * FrontController::$cacheHelper = $appCacheHelper;
- * 
+ *
  *
  * //startup
  * FrontController::start();
- * 
+ *
  * }catch(SystemException $e){
  * 	if(__DEBUG__){
  *    echo "<h3>SystemException</h3>";
@@ -95,11 +95,11 @@ require_once('pworks/common/cache/ICacheHelper.iface.php');
  *    echo "<br>";
  *    echo "<B>TYPE:</B>". $e->type;
  *    echo "<br>";
- *    echo '<B>MESSAGE:</B><font size="4" color="red">'; 
+ *    echo '<B>MESSAGE:</B><font size="4" color="red">';
  *    echo $e->message;
  *    echo "</font>";
- *    echo "<br>";     
- *  }	
+ *    echo "<br>";
+ *  }
  * }
  * </code>
  */
@@ -155,6 +155,9 @@ class FrontController {
 	 * ----[#1]End----
 	 */
 	public static function start($actionId=NULL, $execFilters=TRUE, $isReturnAction=FALSE) {
+		//echo __FILE__.','.__LINE__.', =============================================<br>';
+		//echo __FILE__.','.__LINE__.', start action:'. $actionId . "<br>";;
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		if(self::$_debug){
 			self::$_debugInfo = array();
 		}
@@ -168,7 +171,7 @@ class FrontController {
 		$actionName = '';
 		if(NULL != $actionId){
 			$actionName = $actionId;
-		}else{ 
+		}else{
 			//----[#1]End---
 			$actionParam = self::$dataHelper->get('action',SysDataType::REQUEST);
 			//$actionName = '';  //----[#1]----
@@ -180,6 +183,8 @@ class FrontController {
 				}
 			}
 		}//----[#1]----
+
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 
 		$actionConf = self::$confHelper->getActionConfig($actionName);
 		if($actionConf == NULL){
@@ -200,7 +205,7 @@ class FrontController {
 		//[2009-05-26] Fix issue for sequnce of excuting filters
 		//------------------------------------------------------
 		//if(!self::executeFilters($actionConf, $action, 'pre')){
-
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		if($execFilters){//----[#1]----
 
 			if(!self::executeFiltersBefore($actionConf, $action)){
@@ -208,14 +213,14 @@ class FrontController {
 			}
 
 		}//----[#1]----
-
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		$result = $action->execute();
-
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		if($result == null){
 			$errMsg = 'No result for Action[id=' . $actionName .']';
 			throw new SystemException(SystemException::FRAMEWORK_ERROR,$errMsg);
 		}
-
+	//	echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		//--------------------------------
 		//[Jul. 23, 2009][Milo]
 		//set result into action
@@ -224,13 +229,13 @@ class FrontController {
 		//[2009-05-26] Fix issue for sequnce of excuting filters
 		//------------------------------------------------------
 		//if(!self::executeFilters($actionConf, $action, 'post')){
-
+	//	echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		if($execFilters){//----[#1]----
 			if(!self::executeFiltersAfter($actionConf, $action)){
 				return;
 			}
 		}//----[#1]----
-
+		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 
 		//----[#1]Start----
 		if($isReturnAction){
@@ -242,6 +247,7 @@ class FrontController {
 		//[2009-05-26] Enhance Error handling for Result components
 		//		self::showResult($actionConf->results[$result], $action);
 		self::showActionResult($actionConf, $result, $action);
+	//	echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 	}
 
 
@@ -390,9 +396,9 @@ class FrontController {
 				//[2012-01-14] Add parameter element into Filter
 				//----------------------------------------------
 				foreach ($filterConf->parameters as $key => $value){
-					$filter->$key = $value;					
+					$filter->$key = $value;
 				}
-								
+
 				self::$cacheHelper->store($cacheKeyName, $filter);
 			}catch(SystemException $e){
 				$e->message ='['.__FILE__.', line:'.__LINE__.' ][Filter: '.$filterConf->id.']'.$e->getMessage();
