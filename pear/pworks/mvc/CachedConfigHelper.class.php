@@ -31,7 +31,7 @@
 
 require_once('pworks/common/cache/ICacheHelper.iface.php');
 require_once('pworks/mvc/IConfigHelper.iface.php');
-require_once('pworks/mvc/tool/ConfChecker.class.php');
+#require_once('pworks/mvc/tool/ConfChecker.class.php');
 require_once('pworks/mvc/AppXMLCfgLoader.class.php');
 
 /**
@@ -49,6 +49,17 @@ class CachedConfigHelper implements IConfigHelper {
         $this->cacheHelper = $cacheHelper;
     }
 
+    // TODO: $doCheck参数, 用于检查配置文件的一置性和有效性
+    // 最初设计这一功能的原因是, 在线性的配置文件解释过程中, 一部分的配置内容需
+    // 要其它还没有解释到, 或者不确定是否已经解释完整, 因此需要在所有的配置解释
+    // 完成之后, 才能单独执行一些配置检查任务. 
+    //
+    // 由于检查任务与配置的解释任务不在同一个代码段内维护, 造成检查工具与解释工
+    // 具之间的逻辑实现容易出现集偏差和遗漏, 长期维护工作无法持续.
+    //
+    // 后续, 会设计一种内部的消息机制处理配置文件的有效性检查, 将解释过程与检查
+    // 过程合并, 保持逻辑的高内聚性.
+    // see #8
     public function init($filename, $doCheck=false) {
 
         if(!$this->cacheHelper->fetch('app_conf_init_flag')){
@@ -61,9 +72,9 @@ class CachedConfigHelper implements IConfigHelper {
             $this->appConf = $loader->getAppConfig();
 
             //check configuration
-            if($doCheck){
-                ConfChecker::check($this);
-            }
+            #if($doCheck){
+               # ConfChecker::check($this);
+            #}
              
             $this->cacheHelper->store('app_conf_init_flag', true);
             $this->cacheHelper->store('app_conf', $this->appConf);
