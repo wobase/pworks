@@ -2,4 +2,4 @@ Options +FollowSymLinks
 RewriteEngine On
 RewriteBase /
 
-RewriteRule ^(/\w+)\$ index\.php\?actionId=restful&url=$1&method=%{REQUEST_METHOD} [QSA,L]
+RewriteRule ^(/.*)$ index\.php?actionId=restful&url=$1&method=%{REQUEST_METHOD} [QSA,L]
