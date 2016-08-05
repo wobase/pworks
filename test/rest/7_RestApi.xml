@@ -7,58 +7,49 @@
         <!-- ticket -->
         <action id="ticket.Search" type="rest"
           method="get"
-          url="/ticket">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket"/>
+
 
         <action id="ticket.Create" type="rest"
           method="post"
-          url="/ticket">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket"/>
+
 
         <action id="ticket.GetDetails" type="rest"
           method="get"
-          url="/ticket/id/:ticketId">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket/id/:ticketId"/>
+
 
         <action id="ticket.Update" type="rest"
           method="put"
-          url="/ticket/id/:ticketId">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket/id/:ticketId"/>
+
 
         <action id="ticket.Delete" type="rest"
           method="delete"
-          url="/ticket/id/:ticketId">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket/id/:ticketId"/>
+
 
         <!-- comment -->
         <action id="ticket.comment.Search" type="rest"
           method="get"
-          url="/ticket/id/:ticketId/comment">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket/id/:ticketId/comment"/>
+
 
         <action id="ticket.comment.Create" type="rest"
           method="post"
-          url="/ticket/id/:ticketId/comment">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket/id/:ticketId/comment"/>
+
 
         <action id="ticket.comment.Update" type="rest"
           method="put"
-          url="/ticket/id/:ticketId/comment/id/:commentId">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket/id/:ticketId/comment/id/:commentId"/>
+
 
         <action id="ticket.comment.Delete" type="rest"
           method="delete"
-          url="/ticket/id/:ticketId/comment/id/:commentId">
-            <result id="succ" type="json"/>
-        </action>
+          url="/ticket/id/:ticketId/comment/id/:commentId"/>
+
 
     </actions>
 </application>

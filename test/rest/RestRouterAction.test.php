@@ -6,8 +6,12 @@ require_once('pworks/mvc/AppXMLCfgLoader.class.php');
 
 class RestRouterActionTest extends PHPUnit_Framework_TestCase{
 
+/**
+ * Smoking Case
+ * @group enhancement_7
+ */
   public function testMatchActionNormal(){
-    $configFile = dirname(__FILE__) . '/RestApi.xml';
+    $configFile = dirname(__FILE__) . '/7_RestApi.xml';
     $loader = new AppXMLCfgLoader();
     $loader->load($configFile);
     $configs = $loader->getAppConfig();
@@ -72,7 +76,7 @@ class RestRouterActionTest extends PHPUnit_Framework_TestCase{
         if(null === $rs){
           $actuals[] = 'null';
         }else{
-          $actuals[] = $rs;
+          $actuals[] = array('action' => $rs['action']->id, 'param'=>$rs['param'] );
         }
       }
     }

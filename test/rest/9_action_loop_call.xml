@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application id="yun-api" default-action="restful">
+    <filters>
+        <filter id="data-filter" class="pworks.mvc.filter.CachedHttpInputFilter" type="global">
+        </filter>
+    </filters>
+    <resultTypes>
+        <resultType id="json" class="pworks.mvc.result.JsonResult"/>
+    </resultTypes>
+    <actions>
+        <!-- ticket -->
+        <action id="restful" class="pworks.mvc.action.RestRouterAction" type="rest" method="get" url="/ticket">
+            <result id="succ" type="json"/>
+        </action>
+    </actions>
+</application>

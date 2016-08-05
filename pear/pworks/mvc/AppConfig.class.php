@@ -52,7 +52,7 @@ class AppConfig {
          *
          * @var array<ActionConfig>
          */
-	public $actions;
+	public $actions = array();
 
         /**
          *

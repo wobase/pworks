@@ -29,13 +29,12 @@
  * policies, either expressed or implied, of the copyright holder.
  */
 
-require_once('pworks/mvc/AppConfig.class.php');
-require_once('pworks/mvc/ActionConfig.class.php');
-require_once('pworks/mvc/FilterConfig.class.php');
-require_once('pworks/mvc/ResultTypeConfig.class.php');
-require_once('pworks/mvc/ResultConfig.class.php');
-require_once('pworks/mvc/RestConfig.class.php');
-
+require_once 'pworks/mvc/AppConfig.class.php';
+require_once 'pworks/mvc/ActionConfig.class.php';
+require_once 'pworks/mvc/FilterConfig.class.php';
+require_once 'pworks/mvc/ResultTypeConfig.class.php';
+require_once 'pworks/mvc/ResultConfig.class.php';
+require_once 'pworks/mvc/RestConfig.class.php';
 
 /**
  * [2014-12-09] Upgraded by Milo Liu <cutadra@gmail.com>
@@ -49,7 +48,7 @@ require_once('pworks/mvc/RestConfig.class.php');
  *  - 默认的包名为 action
  *  - 默认的完整类名为id值加上 Action
  *  - 自动添加一个id为succ的result设置
- * ----------------------------------------------------------------------
+ * ----------------------------------------------------------------------.
  *
  *
  * [2012-01-14] Add parameter element into Filter
@@ -132,279 +131,302 @@ require_once('pworks/mvc/RestConfig.class.php');
  * 	</actions>
  * </application>
  */
-class AppXMLCfgLoader {
+class AppXMLCfgLoader
+{
+    private $AppConfig;
 
-	private $AppConfig;
+    public function load($filename)
+    {
+        //echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
+        $dom = new DOMDocument();
+        $dom->load($filename);
 
-	public function load($filename) {
-		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
-		$dom = new DOMDocument();
-		$dom->load($filename);
+        $appNode = $dom->getElementsByTagName('application')->item(0);
+        $this->AppConfig = new AppConfig();
+        $this->AppConfig->id = $appNode->getAttribute('id');
+        $this->AppConfig->defaultAction = $appNode->getAttribute('default-action');
 
-		$appNode = $dom->getElementsByTagName('application')->item(0);
-		$this->AppConfig = new AppConfig();
-		$this->AppConfig->id = $appNode->getAttribute('id');
-		$this->AppConfig->defaultAction = $appNode->getAttribute('default-action');
+        $xpath = new DOMXPath($dom);
+        $globalNodes = $xpath->query('//application/globals/global');
+        foreach ($globalNodes as $gNode) {
+            $key = $gNode->getAttribute('name');
+            $value = $gNode->getAttribute('value');
+            $this->AppConfig->globals[$key] = $value;
+        }
 
-		$xpath = new DOMXPath($dom);
-		$globalNodes = $xpath->query('//application/globals/global');
-		foreach ($globalNodes as $gNode){
-			$key = $gNode->getAttribute('name');
-			$value = $gNode->getAttribute('value');
-			$this->AppConfig->globals[$key] = $value;
-		}
+        $resultTypeNodes = $xpath->query('//application/resultTypes/resultType');
+        foreach ($resultTypeNodes as $rsTpNode) {
+            $rsType = new ResultTypeConfig();
+            $rsType->id = $rsTpNode->getAttribute('id');
+            $rsType->clzName = $rsTpNode->getAttribute('class');
+            $this->AppConfig->resultTypes[$rsType->id] = $rsType;
+        }
 
-		$resultTypeNodes = $xpath->query('//application/resultTypes/resultType');
-		foreach ($resultTypeNodes as $rsTpNode){
-			$rsType = new ResultTypeConfig();
-			$rsType->id = $rsTpNode->getAttribute('id');
-			$rsType->clzName = $rsTpNode->getAttribute('class');
-			$this->AppConfig->resultTypes[$rsType->id] = $rsType;
-		}
+        $filterNodes = $xpath->query('//application/filters/filter');
+        foreach ($filterNodes as $fltNode) {
+            $filter = new FilterConfig();
+            $filter->id = $fltNode->getAttribute('id');
+            $filter->clzName = $fltNode->getAttribute('class');
+
+            //[2009-05-26] Implement Feature Request 2777528
+            //----------------------------------------------
+            $filter->type = $fltNode->getAttribute('type') ? $fltNode->getAttribute('type') : FilterConfig::TYPE_DEFAULT;
+
+            $filterResultNodes = $xpath->query('//application/filters/filter[@id="'.$filter->id.'"]/result');
+            foreach ($filterResultNodes as $filterResultNode) {
+                $result = new ResultConfig();
+                $result->id = $filterResultNode->getAttribute('id');
+                $result->type = $filterResultNode->getAttribute('type');
+                $result->src = $filterResultNode->getAttribute('src');
+                $filter->results[$result->id] = $result;
+            }
+
+            //[2009-05-26] Implement Feature Request 2777528
+            //----------------------------------------------
+            $filterExcludeNodes = $xpath->query('//application/filters/filter[@id="'.$filter->id.'"]/exclude');
+            foreach ($filterExcludeNodes as $filterExcludeNode) {
+                $exActionId = $filterExcludeNode->getAttribute('id');
+                $filter->excludes[$exActionId] = $exActionId;
+            }
+
+            //[2012-01-14] Add parameter element into Filter
+            //----------------------------------------------
+            $filterParamNodes = $xpath->query('//application/filters/filter[@id="'.$filter->id.'"]/parameter');
+
+            foreach ($filterParamNodes as $filterParamNode) {
+                $key = $filterParamNode->getAttribute('key');
+                $value = $filterParamNode->getAttribute('value');
+                $filter->parameters[$key] = $value;
+            }
+
+            $this->AppConfig->filters[$filter->id] = $filter;
+
+            //[2009-05-26] Implement Feature Request 2777528
+            //----------------------------------------------
+            if (FilterConfig::TYPE_GLOBAL == $filter->type) {
+                $this->AppConfig->globalFilters[$filter->id] = $filter;
+            }
+        }
+
+        $actionNodes = $xpath->query('//application/actions/action');
+        foreach ($actionNodes as $actionNode) {
+            $action = new ActionConfig();
+
+						//-- #9 ---------------------------------------------
+						// Added By Milo<cutadra@gmail.com> on Aug. 5th, 2016
+						// For #9 Action循环调用至进程内存被耗尽问题修复
+						if(!$actionNode->hasAttribute('id')){
+							$errMsg = 'The "id" attribute is required of the "action" node, '
+							. 'please check this issue in the file: ' . $filename
+							. ', line: '  . $actionNode->getLineNo();
+							throw new Exception($errMsg, 50901);
+							return;
+						}
+						$action->id = $actionNode->getAttribute('id');
+
+						if(array_key_exists($action->id, $this->AppConfig->actions)){
+							$errMsg = 'A duplicated id: ' . $action->id
+							.  ' is found, at line '. $actionNode->getLineNo()
+							.  ' in the config file: : ' . $filename
+							. ', please rename or remove the action node!';
+							throw new Exception($errMsg, 50902);
+							return;
+						}
+						//-- #9 -----------------------------------------------
 
 
-
-		$filterNodes = $xpath->query('//application/filters/filter');
-		foreach ($filterNodes as $fltNode){
-			$filter = new FilterConfig();
-			$filter->id = $fltNode->getAttribute('id');
-			$filter->clzName = $fltNode->getAttribute('class');
-
-			//[2009-05-26] Implement Feature Request 2777528
-			//----------------------------------------------
-			$filter->type = $fltNode->getAttribute('type')?$fltNode->getAttribute('type'):FilterConfig::TYPE_DEFAULT;
-
-			$filterResultNodes = $xpath->query('//application/filters/filter[@id="'.$filter->id.'"]/result');
-			foreach ($filterResultNodes as $filterResultNode){
-				$result = new ResultConfig();
-				$result->id = $filterResultNode->getAttribute('id');
-				$result->type = $filterResultNode->getAttribute('type');
-				$result->src = $filterResultNode->getAttribute('src');
-				$filter->results[$result->id] = $result;
-			}
-
-			//[2009-05-26] Implement Feature Request 2777528
-			//----------------------------------------------
-			$filterExcludeNodes = $xpath->query('//application/filters/filter[@id="'.$filter->id.'"]/exclude');
-			foreach($filterExcludeNodes as $filterExcludeNode){
-				$exActionId = $filterExcludeNode->getAttribute('id');
-				$filter->excludes[$exActionId] = $exActionId;
-			}
-
-			//[2012-01-14] Add parameter element into Filter
-			//----------------------------------------------
-			$filterParamNodes = $xpath->query('//application/filters/filter[@id="'.$filter->id.'"]/parameter');
-
-			foreach($filterParamNodes as $filterParamNode){
-				$key = $filterParamNode->getAttribute('key');
-				$value = $filterParamNode->getAttribute('value');
-				$filter->parameters[$key] = $value;
-			}
-
-
-			$this->AppConfig->filters[$filter->id] = $filter;
-
-			//[2009-05-26] Implement Feature Request 2777528
-			//----------------------------------------------
-			if(FilterConfig::TYPE_GLOBAL == $filter->type){
-				$this->AppConfig->globalFilters[$filter->id] = $filter;
-			}
-		}
-
-
-		$actionNodes = $xpath->query('//application/actions/action');
-		foreach ($actionNodes as $actionNode){
-			$action = new ActionConfig();
-            $action->id = $actionNode->getAttribute('id');
 
             // ----------------------------------------------
             // [2014-12-09] By Milo Liu <cutadra@gmail.com>
             // 添加对简化action设置的支持
-            if($actionNode->hasAttribute('class')){
+            if ($actionNode->hasAttribute('class')) {
                 $action->clzName = $actionNode->getAttribute('class');
-            }else{
+            } else {
                 //如果没有设置class属性，则根据id来自动补全类设置
                 // 1. package为action
                 // 2. 完成类名为id值加上Action后缀
-                $action->clzName = 'action.' . $action->id . 'Action';
+                $action->clzName = 'action.'.$action->id.'Action';
             }
             //------------------------------------------------
 
-						/**
-						 * ================= #7 ===========================
-						 * [Aug. 03, 2016] Milo Liu <cutadra@gmail.com>
-						 * 添加Restful API配置属性支持
-						 * 1. type
-						 * 2. method
-						 * 3. url
-						 */
-						/* -------
-						   1. type
-						   -------
-						   i. type 的可选值为 controller 和 rest
-						   ii. action 的 type 属性如果不指定或者不在指定的取值范围内, 则默认为'controller'
-						*/
-						$actionTypeOptions = array('controller','rest');
-						$actionType = 'controller';
-						if($actionNode->hasAttribute('type')){
-						 	$actionType = strtolower($actionNode->getAttribute('type'));
-							if(!in_array($actionType, $actionTypeOptions)){
-								$actionType = 'controller'; // 强制设置为默认值
-								//TODO: 此处需要添加日志, 说明type属性在强制转换前后的值变化情况
-							}
-					 	}
-						$action->type = $actionType;
+            /*
+             * ================= #7 ===========================
+             * [Aug. 03, 2016] Milo Liu <cutadra@gmail.com>
+             * 添加Restful API配置属性支持
+             * 1. type
+             * 2. method
+             * 3. url
+             */
+            /* -------
+               1. type
+               -------
+               i. type 的可选值为 controller 和 rest
+               ii. action 的 type 属性如果不指定或者不在指定的取值范围内, 则默认为'controller'
+            */
+            $actionTypeOptions = array('controller', 'rest');
+            $actionType = 'controller';
+            if ($actionNode->hasAttribute('type')) {
+                $actionType = strtolower($actionNode->getAttribute('type'));
+                if (!in_array($actionType, $actionTypeOptions)) {
+                    $actionType = 'controller'; // 强制设置为默认值
+                                //TODO: 此处需要添加日志, 说明type属性在强制转换前后的值变化情况
+                }
+            }
+            $action->type = $actionType;
 
-						/* ---------
-						   2. method
-						   ---------
-						   i. method 的可选值为 get, post, put 和 delete
-						   ii. method 属性如果不指定或者不在指定的取值范围内, 则默认设置为'get'
-						*/
-						$actionMethodOptions = array('get','post', 'put', 'delete');
-						$actionMethod = 'get';
-						if($actionNode->hasAttribute('method')){
-						 	$actionMethod = strtolower($actionNode->getAttribute('method'));
-							if(!in_array($actionMethod, $actionMethodOptions)){
-								$actionMethod = 'get'; // 强制设置为默认值
-								//TODO: 此处需要添加日志, 说明method属性在强制转换前后的值变化情况
-							}
-					 	}
-						$action->method= $actionMethod;
+            /* ---------
+               2. method
+               ---------
+               i. method 的可选值为 get, post, put 和 delete
+               ii. method 属性如果不指定或者不在指定的取值范围内, 则默认设置为'get'
+            */
+            $actionMethodOptions = array('get', 'post', 'put', 'delete');
+            $actionMethod = 'get';
+            if ($actionNode->hasAttribute('method')) {
+                $actionMethod = strtolower($actionNode->getAttribute('method'));
+                if (!in_array($actionMethod, $actionMethodOptions)) {
+                    $actionMethod = 'get'; // 强制设置为默认值
+                                //TODO: 此处需要添加日志, 说明method属性在强制转换前后的值变化情况
+                }
+            }
+            $action->method = $actionMethod;
 
-						/* ------
-							 3. url
-							 ------
-							 i. 如果type值为 controller, url值不做验证
-							 i. 如果type值为 rest, 则对URL进行如下验证:
-							   a) 不可为空
-								 b) 只能包含正斜杠(/), 英文字母[a-zA-Z], 数字[0-9], 冒号(:), 下划线(_)
-								 和连字符(-)
-								 c) 冒号如果存在, 必须紧跟在斜杠之后, 冒号后必须至少存在一个有效变更名,
-								 并且, 在下一个斜杠出现前, 不得再出现另一个冒号
-								 d) 将冒号表示的变量, 注册到全局的 $this->appConfig->restApiMapping
-								 之中, 结构如下:
-								array(
-								  $action->method => array(
-								  	'url_pattern' => array(
-											'pattern' => 'url_pattern',
-											'raw_url' => $action->url,
-											'url_variable' => array( 0 => 'var1' , 1=> 'var2' )
-											'action' => $action->id
-										),
-										...
-									)
-								)
-						*/
-						//echo __FILE__ . ':' . __LINE__ . ': type: '. $action->type . "\n";
+            /* ------
+               3. url
+               ------
+               i. 如果type值为 controller, url值不做验证
+               i. 如果type值为 rest, 则对URL进行如下验证:
+                 a) 不可为空
+                   b) 只能包含正斜杠(/), 英文字母[a-zA-Z], 数字[0-9], 冒号(:), 下划线(_)
+                   和连字符(-)
+                   c) 冒号如果存在, 必须紧跟在斜杠之后, 冒号后必须至少存在一个有效变更名,
+                   并且, 在下一个斜杠出现前, 不得再出现另一个冒号
+                   d) 将冒号表示的变量, 注册到全局的 $this->appConfig->restApiMapping
+                   之中, 结构如下:
+                  array(
+                    $action->method => array(
+                        'url_pattern' => array(
+                              'pattern' => 'url_pattern',
+                              'raw_url' => $action->url,
+                              'url_variable' => array( 0 => 'var1' , 1=> 'var2' )
+                              'action' => $action->id
+                          ),
+                          ...
+                      )
+                  )
+            */
+            //echo __FILE__ . ':' . __LINE__ . ': type: '. $action->type . "\n";
 
-						if('rest' == $action->type){
-							//i. 非空验证
-							//echo __FILE__ . ':' . __LINE__ . ': rest block ' .  "\n";
-							//echo __FILE__ . ':' . __LINE__ . ': Has URL? ' . $actionNode->hasAttribute('url').  "\n";
+                        if ('rest' == $action->type) {
+                            //i. 非空验证
+                            //echo __FILE__ . ':' . __LINE__ . ': rest block ' .  "\n";
+                            //echo __FILE__ . ':' . __LINE__ . ': Has URL? ' . $actionNode->hasAttribute('url').  "\n";
 
-							if(! $actionNode->hasAttribute('url')){
-								//echo __FILE__ . ':' . __LINE__ . ': No url block ' .  "\n";
-								$errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.']';
-								throw new Exception($errorMsg.'rest类型的action, 其url设定不可为空!', 50701);
-								return;
-							}
+                            if (!$actionNode->hasAttribute('url')) {
+                                //echo __FILE__ . ':' . __LINE__ . ': No url block ' .  "\n";
+                                $errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.']';
+                                throw new Exception($errorMsg.'rest类型的action, 其url设定不可为空!', 50701);
 
-							$actionUrl = trim($actionNode->getAttribute('url'));
-							if(empty($actionUrl)){
-								$errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.'][URL: NULL]';
-								throw new Exception($errorMsg.'rest类型的action, 其url设定不可为空!', 50701);
-								return;
-							}
+                                return;
+                            }
 
-							// ii. 的效性验证
-							$urlPattern = '#^/[:_a-zA-Z][-_0-9a-zA-Z]*(/[:_a-zA-Z][-_0-9a-zA-Z]*)*$#';
-							$matches = null;
-							preg_match_all($urlPattern, $actionUrl, $matches, PREG_PATTERN_ORDER);
+                            $actionUrl = trim($actionNode->getAttribute('url'));
+                            if (empty($actionUrl)) {
+                                $errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.'][URL: NULL]';
+                                throw new Exception($errorMsg.'rest类型的action, 其url设定不可为空!', 50701);
 
-							//print_r($actionUrl);
-							//echo "\n";
-							//print_r($matches[0][0]);
-							//echo "\n";
+                                return;
+                            }
 
+                            // ii. 的效性验证
+                            $urlPattern = '#^/[:_a-zA-Z][-_0-9a-zA-Z]*(/[:_a-zA-Z][-_0-9a-zA-Z]*)*$#';
+                            $matches = null;
+                            preg_match_all($urlPattern, $actionUrl, $matches, PREG_PATTERN_ORDER);
 
-							if( !is_array($matches)
-							||  !isset($matches[0]) || !isset($matches[0][0])
-							|| $actionUrl !== $matches[0][0]) {
-								//print_r($actionUrl);exit;
-								$errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.'][URL:'.$actionUrl.']';
-								throw new Exception($errorMsg.'URL不符合格式要求, 必须以/开头, 只能包含正斜杠(/), 英文字母[a-zA-Z], 数字[0-9], 冒号(:), 下划线(_)!', 50702);
-								return;
-							}
-							$action->url = $actionUrl;
+                            //print_r($actionUrl);
+                            //echo "\n";
+                            //print_r($matches[0][0]);
+                            //echo "\n";
 
-							/// iii. 剥离URL中的变量名, 并生成最终的动态表达式
+                            if (!is_array($matches)
+                            ||  !isset($matches[0]) || !isset($matches[0][0])
+                            || $actionUrl !== $matches[0][0]) {
+                                //print_r($actionUrl);exit;
+                                $errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.'][URL:'.$actionUrl.']';
+                                throw new Exception($errorMsg.'URL不符合格式要求, 必须以/开头, 只能包含正斜杠(/), 英文字母[a-zA-Z], 数字[0-9], 冒号(:), 下划线(_)!', 50702);
+
+                                return;
+                            }
+                            $action->url = $actionUrl;
+
+                            /// iii. 剥离URL中的变量名, 并生成最终的动态表达式
               $urlVarPattern = '#/:([_a-zA-Z][-_0-9a-zA-Z]*)/?#';
-							$varMatches = null;
-							$apiUrlPattern = $action->url;
-							preg_match_all($urlVarPattern, $action->url, $varMatches, PREG_PATTERN_ORDER);
-							if( count($varMatches)> 1 ){
-								foreach($varMatches[1] as $urlVarName){
-									$varPattern = "(?P<$urlVarName>[-_0-9a-zA-Z]+)";
-									$apiUrlPattern = str_replace(":$urlVarName", $varPattern, $apiUrlPattern);
-								}
-							}
+                            $varMatches = null;
+                            $apiUrlPattern = $action->url;
+                            preg_match_all($urlVarPattern, $action->url, $varMatches, PREG_PATTERN_ORDER);
+                            if (count($varMatches) > 1) {
+                                foreach ($varMatches[1] as $urlVarName) {
+                                    $varPattern = "(?P<$urlVarName>[-_0-9a-zA-Z]+)";
+                                    $apiUrlPattern = str_replace(":$urlVarName", $varPattern, $apiUrlPattern);
+                                }
+                            }
 
-							if(array_key_exists($apiUrlPattern, $this->AppConfig->rest[$action->method])){
-								$errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.'][URL:'.$actionUrl.']';
-								throw new Exception($errorMsg.'重复定义的URL及Method, 请检查配置文件, 修正或者清理配置信息!', 50703);
-								return;
-							}
+                            if (array_key_exists($apiUrlPattern, $this->AppConfig->rest[$action->method])) {
+                                $errorMsg = '[Config File:'.$filename.'][Action ID:'.$action->id.'][HTTP Method:'.$action->method.'][URL:'.$actionUrl.']';
+                                throw new Exception($errorMsg.'重复定义的URL及Method, 请检查配置文件, 修正或者清理配置信息!', 50703);
 
-							$restApiConfig = new RestConfig();
-							$restApiConfig->pattern = $apiUrlPattern;
-							$restApiConfig->url = $action->url;
-							$restApiConfig->method = $action->method;
-							$restApiConfig->action = $action;
-							$this->AppConfig->rest[$restApiConfig->method][$restApiConfig->pattern] = $restApiConfig;
-						}
+                                return;
+                            }
 
-						/* ================= #7 =========================== */
+                            $restApiConfig = new RestConfig();
+                            $restApiConfig->pattern = $apiUrlPattern;
+                            $restApiConfig->url = $action->url;
+                            $restApiConfig->method = $action->method;
+                            $restApiConfig->action = $action;
+                            $this->AppConfig->rest[$restApiConfig->method][$restApiConfig->pattern] = $restApiConfig;
+                        }
 
-			$actionFilterNodes = $xpath->query('//application/actions/action[@id="'.$action->id.'"]/filter');
-			foreach ($actionFilterNodes as $actionFilterNode){
-				$action->filters[]=$actionFilterNode->getAttribute('id');
-			}
+                        /* ================= #7 =========================== */
 
-			$actionResultNodes = $xpath->query('//application/actions/action[@id="'.$action->id.'"]/result');
+            $actionFilterNodes = $xpath->query('//application/actions/action[@id="'.$action->id.'"]/filter');
+            foreach ($actionFilterNodes as $actionFilterNode) {
+                $action->filters[] = $actionFilterNode->getAttribute('id');
+            }
+
+            $actionResultNodes = $xpath->query('//application/actions/action[@id="'.$action->id.'"]/result');
             //DebugUtil::dump($actionResultNodes->item(0), __FILE__, __LINE__);
 
-
-			// ----------------------------------------------
+            // ----------------------------------------------
             // [2014-12-09] By Milo Liu <cutadra@gmail.com>
             // 添加对简化action设置的支持
             // 如果没有设置result元素，则自动添加一个id值为succ的result配置
-            if(0 == sizeof($actionResultNodes) ){
+            if (0 == sizeof($actionResultNodes)) {
                 $result = new ResultConfig();
                 $result->id = 'succ';
                 $action->results['succ'] = $result;
             }
             // ----------------------------------------------
 
-            foreach ($actionResultNodes as $actionRsNode){
-				$result = new ResultConfig();
-				$result->id = $actionRsNode->getAttribute('id');
-				$result->type = $actionRsNode->getAttribute('type');
-				$result->src = $actionRsNode->getAttribute('src');
-				$resultParams = $actionRsNode->getElementsByTagName('param');
-				$result->params = array();
-				foreach($resultParams as $rsParam){
-					$result->params[$rsParam->getAttribute('name')] = $rsParam->getAttribute('value');
-				}
-				$action->results[$result->id] = $result;
-			}
+            foreach ($actionResultNodes as $actionRsNode) {
+                $result = new ResultConfig();
+                $result->id = $actionRsNode->getAttribute('id');
+                $result->type = $actionRsNode->getAttribute('type');
+                $result->src = $actionRsNode->getAttribute('src');
+                $resultParams = $actionRsNode->getElementsByTagName('param');
+                $result->params = array();
+                foreach ($resultParams as $rsParam) {
+                    $result->params[$rsParam->getAttribute('name')] = $rsParam->getAttribute('value');
+                }
+                $action->results[$result->id] = $result;
+            }
 
-			$this->AppConfig->actions[$action->id]	= $action;
-		}
-		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
-	}
+            $this->AppConfig->actions[$action->id] = $action;
+        }
+        //echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
+    }
 
-	public function getAppConfig(){
-		return $this->AppConfig;
-	}
+    public function getAppConfig()
+    {
+        return $this->AppConfig;
+    }
 }

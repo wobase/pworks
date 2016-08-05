@@ -7,9 +7,12 @@ require_once('pworks/mvc/RestConfig.class.php');
 
 class ActionConfigTest extends PHPUnit_Framework_TestCase{
 
-  // 普通固定URL
+  /**
+  * 普通固定URL
+  * @group enhancement_7
+  */
   public function testStaticRestUrl(){
-    $configFile = dirname(__FILE__) . '/rest_normal.xml';
+    $configFile = dirname(__FILE__) . '/7_rest_normal.xml';
 
     $expected = new ActionConfig();
     $expected->id = "ticket.Search";
@@ -54,9 +57,12 @@ class ActionConfigTest extends PHPUnit_Framework_TestCase{
     //($actualRest);
   }
 
-  // URL中包含参数
+  /**
+  *  URL中包含参数
+  *   @group enhancement_7
+  */
   public function testUrlWithVariables(){
-    $configFile = dirname(__FILE__) . '/url_with_param.xml';
+    $configFile = dirname(__FILE__) . '/7_url_with_param.xml';
 
     $excepted = new RestConfig();
     $excepted->url = '/ticket/id/:ticketId';
@@ -89,9 +95,12 @@ class ActionConfigTest extends PHPUnit_Framework_TestCase{
   }
 
 
-  //url为空容错测试
+  /**
+   * url为空容错测试
+   * @group enhancement_7
+   */
   public function testNullUrl(){
-    $configFile = dirname(__FILE__) . '/null_url.xml';
+    $configFile = dirname(__FILE__) . '/7_null_url.xml';
 
     $errorMsg = '[Config File:'.$configFile.'][Action ID:ticket.Null][HTTP Method:get]';
     $expected =  new Exception($errorMsg.'rest类型的action, 其url设定不可为空!', 50701);
@@ -107,9 +116,12 @@ class ActionConfigTest extends PHPUnit_Framework_TestCase{
     }
   }
 
-  //url地址格式错误测试用例
+  /**
+   * url地址格式错误测试用例
+   * @group enhancement_7
+   */
   public function testInvalidUrl(){
-    $configFile = dirname(__FILE__) . '/invalid_url.xml';
+    $configFile = dirname(__FILE__) . '/7_invalid_url.xml';
 
     $errorMsg = '[Config File:'.$configFile.'][Action ID:ticket.Invalid][HTTP Method:get][URL:this/is/an/invalid/url/!@#%/:dfdf:00-_)(/]';
     $expected =  new Exception($errorMsg.'URL不符合格式要求, 必须以/开头, 只能包含正斜杠(/), 英文字母[a-zA-Z], 数字[0-9], 冒号(:), 下划线(_)!', 50702);
@@ -125,9 +137,12 @@ class ActionConfigTest extends PHPUnit_Framework_TestCase{
     }
   }
 
-  //RESTFul API地址重复容错测试
+  /**
+  * RESTFul API地址重复容错测试
+  *  @group enhancement_7
+  */
   public function testDuplicateUrl(){
-    $configFile = dirname(__FILE__) . '/duplicate_rest_url.xml';
+    $configFile = dirname(__FILE__) . '/7_duplicate_rest_url.xml';
 
     $errorMsg = '[Config File:'.$configFile.'][Action ID:ticket.Duplicated][HTTP Method:get][URL:/ticket/id/:ticketId]';
     $expected =  new Exception($errorMsg.'重复定义的URL及Method, 请检查配置文件, 修正或者清理配置信息!', 50703);
@@ -138,6 +153,52 @@ class ActionConfigTest extends PHPUnit_Framework_TestCase{
       //$this->assertFalse(true, "预期的异常没有抛出!");
     }catch(Exception $actual){
 
+      $this->assertEquals($expected, $actual);
+      //print_r($actual);
+    }
+  }
+
+
+  /**
+   * TODO: Null Action ID check
+   * @group bug_9 cases
+   */
+  public function testNullActionId(){
+    $configFile = dirname(__FILE__) . '/9_null_action_id.xml';
+
+    $errorMsg = 'The "id" attribute is required of the "action" node, '
+    . 'please check this issue in the file: ' . $configFile
+    . ', line: 8';
+
+    $expected =  new Exception($errorMsg, 50901);
+
+    $fixture = new AppXMLCfgLoader();
+    try{
+      $fixture->load($configFile);
+    }catch(Exception $actual){
+      $this->assertEquals($expected, $actual);
+      //print_r($actual);
+  }
+}
+
+   /**
+    * TODO: Duplicate Action ID check
+    * @group bug_9 cases
+    */
+  public function testDuplicateActionId(){
+    $configFile = dirname(__FILE__) . '/9_duplicate_action_id.xml';
+
+    $errorMsg = 'A duplicated id: ticket.Search'
+							.  ' is found, at line 9'
+							.  ' in the config file: : ' . $configFile
+							. ', please rename or remove the action node!';
+
+    $expected =  new Exception($errorMsg, 50902);
+
+    $fixture = new AppXMLCfgLoader();
+    try{
+      $fixture->load($configFile);
+    }catch(Exception $actual){
       $this->assertEquals($expected, $actual);
       //print_r($actual);
     }

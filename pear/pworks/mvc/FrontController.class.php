@@ -122,6 +122,8 @@ class FrontController {
 	private static $_debugInfo;
 	private static $_filterStack;
 
+	private static $_actionStack = array();
+
 
 	public static function isDebug($debug){
 		self::$_debug = $debug;
@@ -146,6 +148,9 @@ class FrontController {
 	}
 
 
+
+
+
 	/**
 	 * ----[#1][2011-12-08][Milo Liu] Start----
 	 * Add two new parameters for reusing this fucntion for internal action calls
@@ -155,6 +160,25 @@ class FrontController {
 	 * ----[#1]End----
 	 */
 	public static function start($actionId=NULL, $execFilters=TRUE, $isReturnAction=FALSE) {
+		//--- #9 -----------------------
+		// Added by Milo <cutadra@gmail.com> on Aug. 06, 2016
+		// 修复Action循环嵌套问题(#9)
+		if(array_key_exists($actionId, self::$_actionStack)){
+			self::$_actionStack[$actionId]++;
+		}else{
+			self::$_actionStack[$actionId] = 1;
+		}
+
+		if(self::$_actionStack[$actionId] > 5){
+			$errMsg = "Action[id:$actionId] had been called more 5 times in a single"
+			. " HTTP Request process, there may exist loop call, please check if there"
+			. " exist codes using BaseAction::callAction() or FrontController::start()"
+			. " methods.";
+			throw new Exception($errMsg, 50903);
+			return;
+		}
+		//--- #9 -----------------------
+
 		//echo __FILE__.','.__LINE__.', =============================================<br>';
 		//echo __FILE__.','.__LINE__.', start action:'. $actionId . "<br>";;
 		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";

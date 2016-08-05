@@ -62,6 +62,9 @@ class RestRouterAction extends BaseAction{
     $method = strtolower(trim($this->method));
 
     $appConfig = FrontController::getConfHelper()->getApp();
+    //print_r($this);exit;
+
+    //print_r($appConfig);exit;
     $restConfigs = $appConfig->rest[$method];
     //print_r($restConfigs);
     $rs = $this->matchAction($restConfigs, $this->url);
