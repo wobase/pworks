@@ -226,6 +226,13 @@ class FrontController {
 		$action->setConfig($actionConf);
 		//DebugUtil::dump($action, __FILE__, __LINE__);
 
+
+		// [2017-04-01] Milo <cutadra@gmail.com>
+		// fill get and post data into action
+		$action->_http_get = self::$dataHelper->getVar(SysDataType::GET);
+		$action->_http_post = self::$dataHelper->getVar(SysDataType::POST);
+
+
 		//[2009-05-26] Fix issue for sequnce of excuting filters
 		//------------------------------------------------------
 		//if(!self::executeFilters($actionConf, $action, 'pre')){
@@ -238,7 +245,13 @@ class FrontController {
 
 		}//----[#1]----
 		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
+		$reqUSec = explode(" ", microtime());
+		$action->head['requestTime'] = date("Y-m-d H:i:s.") . substr($reqUSec[0], 2);
+
 		$result = $action->execute();
+
+		$resUSec = explode(" ", microtime());
+		$action->head['responseTime'] = date("Y-m-d H:i:s.") . substr($resUSec[0],2);
 		//echo __FILE__.','.__LINE__.', Mem Use:'. ( memory_get_usage() / 1024 / 1024) . "MB<br>";
 		if($result == null){
 			$errMsg = 'No result for Action[id=' . $actionName .']';

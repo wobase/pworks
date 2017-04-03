@@ -56,22 +56,51 @@ require_once('pworks/mvc/action/BaseAction.class.php');
 class RestRouterAction extends BaseAction{
   public $url;
   public $method;
+  public $content_type;
+
+  // [2017-04-01] Milo <cutadra@gmail.com>
+  // Added new member, head, it will be used to store
+  // the following common head information for restful response.
+  // - requestUrl       full url without get parameters
+  // - requestMethod    HTTP Method
+  // - requestTime      date('Y-m-d H:i:s.v')
+  // - responseTime     date('Y-m-d H:i:s.v')
+  // - requestParameters all parameter in get post and rest path
+  public $head = array();
 
   public function execute(){
 
+//var_dump($this->url);
+//var_dump($this->method);
+//var_dump($this->content_type);
+//var_dump($this->_http_get);
+//var_dump($this->_http_post);
+
+
+
     $method = strtolower(trim($this->method));
 
+    $this->head['requestMethod'] = $this->method;
+    $this->head['requestUrl'] = $this->url;
+
+
     $appConfig = FrontController::getConfHelper()->getApp();
+
+#var_dump($appConfig);
+
     //print_r($this);exit;
 
     //print_r($appConfig);exit;
     $restConfigs = $appConfig->rest[$method];
     //print_r($restConfigs);
     $rs = $this->matchAction($restConfigs, $this->url);
+
+//var_dump($rs);
+
     if( null === $rs){
-      $this->addError('action', __CLASS__);
-      $this->addError('url', $this->url);
-      $this->addError('method', $method);
+      $this->addError('405', 'action:'. __CLASS__);
+      $this->addError('405', 'url:'. $this->url);
+      $this->addError('405', 'method:'. $method);
       $this->__status = '405';
       return 'succ';
     }
@@ -79,13 +108,38 @@ class RestRouterAction extends BaseAction{
     $actionId = $rs['action']->id;
     $param = $rs['param'];
 
+    if('application/json' == strtolower(trim($this->content_type))) {
+      $jsonData = json_decode($this->_http_post , true);
+
+//var_dump($jsonData);
+
+      if( NULL === $jsonData){
+        $this->addError('405', 'Invalid JSON String in the POST body: ' . $this->_http_post);
+        $this->__status = '406';
+        return 'succ';
+      }else{
+        foreach($jsonData as $postJsonField => $postJsonValue ){
+          $param[$postJsonField] = $postJsonValue;
+        }
+      }
+    }
+
+    $this->head['requestParameters'] = $param;
+    //$this->head['requestParameters']['get'] = $this->_http_get;
+    //$this->head['requestParameters']['post'] = $this->_http_post;
+
+//var_dump($param);
+//var_dump($actionId);
     $restAction = $this->callAction($actionId, $param);
+//var_dump($restAction);
 
     $this->_data = $restAction->getData();
     $this->_errors = $restAction->getErrors();
     $this->_warnings = $restAction->getWarnings();
     $this->_infos = $restAction->getInfos();
     $this->__status = $restAction->getResult();
+
+
 
     return 'succ';
   }
