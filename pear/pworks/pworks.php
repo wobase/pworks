@@ -42,7 +42,7 @@ require_once('pworks/mvc/DefaultSystemDataHelper.class.php');
 require_once('pworks/mvc/CachedConfigHelper.class.php');
 require_once('pworks/common/cache/impl/SimpleCacheHelper.class.php');
 require_once('pworks/common/cache/impl/ArrayCache.class.php');
-require_once('pworks/common/cache/impl/ApcCache.class.php');
+require_once('pworks/common/cache/impl/ApcuCache.class.php');
 require_once('pworks/util/DebugUtil.class.php');
 
 // 调试开关
@@ -52,7 +52,7 @@ DebugUtil::$enable = $debug;
 // 缓存清除开关
 $refCache = (isset($_REQUEST['__clean_cache']) && 'true' == strtolower($_REQUEST['__clean_cache']))? true : false;
 if($refCache){
-    apc_clear_cache('user');
+    apcu_clear_cache('user');
 }
 
 $_configCacheGroupName = APP_NAME . '-configs';
@@ -60,7 +60,7 @@ $_appCacheGroupName = APP_NAME . '-application-objects';
 
 //缓存别名和级别映射
 $_cacheClassMapping = array();
-$_cacheClassMapping['apc'] = array('ApcCache', 1);
+$_cacheClassMapping['apcu'] = array('ApcuCache', 1);
 $_cacheClassMapping['array'] = array('ArrayCache', 2);
 // JsonCache will be implemented in next release
 //$_cacheClassMapping['json'] = array('JsonCache', 3);

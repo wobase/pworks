@@ -1,36 +1,36 @@
 <?php
 /*
- * Copyright 2009 - 2015 Milo Liu<cutadra@gmail.com>. 
+ * Copyright 2009 - 2015 Milo Liu<cutadra@gmail.com>.
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
+ *    1. Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
- * 
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
+ *
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
- * The views and conclusions contained in the software and documentation are 
- * those of the authors and should not be interpreted as representing official 
+ *
+ * The views and conclusions contained in the software and documentation are
+ * those of the authors and should not be interpreted as representing official
  * policies, either expressed or implied, of the copyright holder.
  */
 
 require_once('pworks/mvc/IFilter.iface.php');
-require_once('pworks/common/cache/impl/ApcCache.class.php');
+require_once('pworks/common/cache/impl/ApcuCache.class.php');
 require_once('pworks/common/httputil/DefaultHttpInputValidation.class.php');
 require_once('pworks/common/httputil/HttpConst.class.php');
 require_once('pworks/common/exception/SystemException.class.php');
@@ -54,8 +54,8 @@ require_once('pworks/common/exception/SystemException.class.php');
  * </ul>
  */
 class CachedHttpInputFilter implements IFilter{
-	
-	
+
+
 	/**
 	 * [2012-01-14] Allow application to customize the messages
 	 * e.g.:
@@ -65,19 +65,19 @@ class CachedHttpInputFilter implements IFilter{
 	 * $messages[CachedHttpInputFilter::ERROR_ISNULL] = '%s is required';
 	 * $messages[CachedHttpInputFilter::ERROR_NUMBER] = 'The value for %s is not a valid number';
 	 * $messages[CachedHttpInputFilter::ERROR_DATETIME] = 'The value for %s is not a valid date and time';
-	 * $messages[CachedHttpInputFilter::ERROR_DATE] = 'The value for %s is not a valid date'; 
-	 * $messages[CachedHttpInputFilter::ERROR_POSITIVE_NUMBER] = 'The value for %s is not a valid positive number'; 
-	 * $messages[CachedHttpInputFilter::ERROR_STRING_NUMBER] = 'The value for %s is not a valid string'; 
-	 * $messages[CachedHttpInputFilter::ERROR_MAX_LENGTH] = 'The value for %s is too long'; 
-	 * $messages[CachedHttpInputFilter::ERROR_EMAIL] = 'The value for %s is not a valid email address'; 
-	 * $messages[CachedHttpInputFilter::ERROR_URL] = 'The value for %s is not a valid URL'; 
-	 * $messages[CachedHttpInputFilter::ERROR_HTML] = 'The value for %s is not a valid html content'; 
+	 * $messages[CachedHttpInputFilter::ERROR_DATE] = 'The value for %s is not a valid date';
+	 * $messages[CachedHttpInputFilter::ERROR_POSITIVE_NUMBER] = 'The value for %s is not a valid positive number';
+	 * $messages[CachedHttpInputFilter::ERROR_STRING_NUMBER] = 'The value for %s is not a valid string';
+	 * $messages[CachedHttpInputFilter::ERROR_MAX_LENGTH] = 'The value for %s is too long';
+	 * $messages[CachedHttpInputFilter::ERROR_EMAIL] = 'The value for %s is not a valid email address';
+	 * $messages[CachedHttpInputFilter::ERROR_URL] = 'The value for %s is not a valid URL';
+	 * $messages[CachedHttpInputFilter::ERROR_HTML] = 'The value for %s is not a valid html content';
 	 * </code>
-	 */ 
+	 */
 	public $messageFilePath;
 	public $useMessagePack=false; // this property is used for version compatible
 	public $errorMessages = array();
-	
+
     const CACHE_PREFIX = 'input_filter_';
     const PATTERN = '/[\s\t]*\*[\s]*@([\w]+)[\s]+(.+)/';
     const TAG_FILTER = 'filter';
@@ -128,14 +128,14 @@ class CachedHttpInputFilter implements IFilter{
      * @var ApcCache
      */
     private $cache;
-    
+
     //private $errors;
-    
+
     /**
      * @var IAction
      */
     private $action;
-    
+
     //[2012-01-14] Allow application to customize the messages
     private function genMsgContent($error,$label){
     	if($this->useMessagePack){
@@ -144,9 +144,9 @@ class CachedHttpInputFilter implements IFilter{
     		return array($error, $label);
     	}
     }
-    
+
     public function before(IAction &$action){
-    	
+
     	//[2012-01-14] Allow application to customize the messages
     	if($this->useMessagePack){
     		$error_messages = array();
@@ -155,9 +155,9 @@ class CachedHttpInputFilter implements IFilter{
     		$this->errorMessages = $error_messages;
     		unset($error_messages);
     	}
-    	
-    	
-        $this->cache = new ApcCache();
+
+
+        $this->cache = new ApcuCache();
         $this->recursionLevel = 0;
 
         $filters = $this->getActionFilterTypes($action);
@@ -208,7 +208,7 @@ class CachedHttpInputFilter implements IFilter{
                     {
                         if ($filter->filter == self::FILTER_NUMBER)
                         {
-                            if(array_sum($origData) == 0) 
+                            if(array_sum($origData) == 0)
                             {
                                 $this->action->addError($property, $this->genMsgContent(self::ERROR_ISNULL, $filter->label));
                                 $null_flag = true;
@@ -374,26 +374,26 @@ class CachedHttpInputFilter implements IFilter{
     public function getActionFilterTypes(&$action){
         $key = self::CACHE_PREFIX . 'action_' .  $action->getConfig()->clzName;
         $filerTypes = array();
-		
+
         global $__USE_JSON_FILTER__;
         if($__USE_JSON_FILTER__){
         	require_once 'filters.inc';
         	$filters = json_decode($__filters_json);
         	return $filters[$key];
         }
-        
-        
+
+
         if($this->cache->fetch($key)===FALSE){
             $ref = new ReflectionObject($action);
             $this->recursionLevel = 0;
             $filerTypes = $this->parseDoc($ref, self::PARENT_TYPE_ACTION);
-            
+
             global $__DUMP_DOC_TAGS__;
             if($__DUMP_DOC_TAGS__){
             $json_arr[$key] = $filerTypes;
             	echo json_encode($json_arr);
             }
-            
+
             $this->cache->store($key, new ArrayObject($filerTypes));
         }
         else{
@@ -514,4 +514,3 @@ class FilterType{
     public $filterTypes;
     public $maxLength;
 }
-
