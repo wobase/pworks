@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application id="nextmeal-admin-api" default-action="restful">
+	<globals>
+	</globals>
+
+	<filters>
+		<filter id="data-filter" class="pworks.mvc.filter.CachedHttpInputFilter" type="global">
+			<!--parameter key="messageFilePath" value="conf/common_error_messages.php"/-->
+			<!--parameter key="useMessagePack" value="TRUE"/-->
+		</filter>
+		<!--<filter id="login-filter" class="filter.CheckLoginFilter" type="global">
+			<exclude id="restful"/>
+			<exclude id="UserLogin"/>
+			<exclude id="UpdateProductApi"/>
+		</filter>-->
+
+	</filters>
+	<resultTypes>
+		<resultType id="json" class="pworks.mvc.result.JsonResult" />
+	</resultTypes>
+
+	<actions>
+		<action id="restful" class="pworks.mvc.action.RestRouterAction">
+			<result id="succ" type="json" />
+		</action>
+
+		<action type="rest" url="/ticket" method="post" id="ticket.Create"/>
+	</actions>
+
+</application>
