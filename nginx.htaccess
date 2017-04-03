@@ -1,1 +1,1 @@
-rewrite ^(/.*)$ /pworks/index.php?actionId=restful&url=$1&method=$request_method&$args last;
+rewrite ^(/.*)$ /index.php?actionId=restful&url=$1&method=$request_method&content_type=$content_type$args last;
