@@ -53,6 +53,7 @@ class DefaultSystemDataHelper implements ISystemDataHelper {
 
 			case SysDataType::POST :
 				global $_POST;
+
 				$_POST[$name]=$value;
 				break;
 
@@ -76,6 +77,43 @@ class DefaultSystemDataHelper implements ISystemDataHelper {
 				break;
 		}
 	}
+
+
+	/**
+	 * [2017-04-01] Milo <cutadra@gmail.com>
+	 * added a new method to get system variables
+	 */
+	 public function getVar($type=NULL){
+			if(NULL==$type) $type = $this->defaultType;
+
+			switch($type){
+				case SysDataType::GET :
+					global $_GET;
+					return $_GET;
+
+				case SysDataType::POST :
+					if(isset($_SERVER['HTTP_CONTENT_TYPE'])
+						&& 'application/json' == strtolower(trim($_SERVER['HTTP_CONTENT_TYPE'])) ) {
+							return file_get_contents('php://input');
+					}else{
+							global $_POST;
+							return $_POST;
+					}
+
+				case SysDataType::REQUEST :
+					global $_REQUEST;
+					return $_REQUEST;
+
+				case SysDataType::SERVER :
+					global $_SERVER;
+					return $_SERVER;
+
+				case SysDataType::COOKIE :
+					global $_COOKIE;
+					return $_COOKIE;
+			}
+	 }
+
 
 
 	//[2011-12-08][Milo Liu] add default value for type parameter
