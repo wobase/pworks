@@ -42,7 +42,7 @@ class FrontControllerTest extends PHPUnit_Framework_TestCase{
         $expected = new Exception($errMsg, 50903);
 
         $this->assertEquals($expected, $actual);
-        print_r($actual);
+        //print_r($actual);
     }
   }
 
